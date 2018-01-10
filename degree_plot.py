@@ -11,8 +11,8 @@ with open("degree_dist.csv", 'rb') as csvfile:
 
 
 plt.plot(x, y, 'b+')
-plt.title("Degree Distribution - Blog Catalog")
-plt.xlabel("Degree")
-plt.ylabel("Frequency")
+plt.title("Blog Catalog - Frequency of Vertex Occurrence in Short Random Walks")
+plt.xlabel("Vertex Visitation Count")
+plt.ylabel("# of Vertices")
 plt.show()
 
