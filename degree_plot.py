@@ -10,7 +10,7 @@ with open("degree_dist.csv", 'rb') as csvfile:
     y.append(int(row['frequency']))
 
 
-plt.plot(x, y, 'ro')
+plt.plot(x, y, 'b+')
 plt.title("Degree Distribution - Blog Catalog")
 plt.xlabel("Degree")
 plt.ylabel("Frequency")
