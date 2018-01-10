@@ -1,0 +1,14 @@
+#!/bin/bash
+
+DATASET_FILE=datasets/dataset.txt
+SAVE_PATH=/tmp
+
+# build the dgtree
+time spark-submit --master local[2] \
+                  --class com.nrl.SparkedDeepWalkApp \
+                  --executor-memory 2g \
+                  --driver-memory 1g \
+                  target/scala-2.11/sparked-deepwalk_2.11-1.0.jar \
+                  $DATASET_FILE \
+                  $SAVE_PATH \
+#2> /dev/null

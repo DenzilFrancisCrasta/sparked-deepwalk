@@ -1,0 +1,12 @@
+*.class
+*.swp
+*.log
+target/
+images/
+datasets/
+spark-warehouse/
+metastore_db/
+logs/
+.nfs*
+*.dat
+*.vim
