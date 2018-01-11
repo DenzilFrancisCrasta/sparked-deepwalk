@@ -53,8 +53,8 @@ object SparkedDeepWalkApp {
       for (iter <- 1 until LAMBDA) {
         keyedRandomWalks = adjacencyList.join(keyedRandomWalks)
                         .map {
-                          case (_, (neighbours, walkSoFar)) => {
-                            val r = new Random
+                          case (node_id, (neighbours, walkSoFar)) => {
+                            val r = new Random(node_id)
                             val randomNeighbour = neighbours(r.nextInt(neighbours.size))
                             (randomNeighbour, randomNeighbour :: walkSoFar )
                           } 
@@ -64,15 +64,15 @@ object SparkedDeepWalkApp {
 
       val randomWalks = keyedRandomWalks.values.persist()
 
-      val degreeDistribution = randomWalks.flatMap((walk: List[Long]) => walk)
+      val vertexVisitCounts = randomWalks.flatMap((walk: List[Long]) => walk)
                                           .countByValue
                                           .values
                                           .groupBy(identity)
                                           .mapValues(_.size)
 
       val writer = new PrintWriter(new File(OUTPUT_DIR + DATASET_NAME + "_vertex_visit_freq.csv"))
-      writer.write("degree,frequency\n")
-      degreeDistribution.foreach {
+      writer.write("numberOfVisits,numberOfVertices\n")
+      vertexVisitCounts.foreach {
         case (k, v) => 
           writer.write(k +","+ v+"\n")
       }
