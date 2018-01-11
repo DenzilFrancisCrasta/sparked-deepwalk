@@ -6,6 +6,7 @@ import org.apache.spark.HashPartitioner
 import scala.util.Random
 import java.io._
 
+import org.apache.spark.mllib.feature.{Word2Vec, Word2VecModel}
 
 object SparkedDeepWalkApp {
 
@@ -87,6 +88,15 @@ object SparkedDeepWalkApp {
       println("|Y| " + labels.count)
       println("Adjacency List |V|" + adjacencyList.count)
       println("Random Walk |V|" + randomWalks.count)
+
+
+      val word2vec = new Word2Vec()
+      val model = word2vec.fit(randomWalks.map(_.map(_.toString)))
+      val vectors = model.getVectors
+
+      vectors.take(2).foreach(println)
+
+
 
       spark.stop()
 
