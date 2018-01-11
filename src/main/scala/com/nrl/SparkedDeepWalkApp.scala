@@ -54,7 +54,7 @@ object SparkedDeepWalkApp {
         keyedRandomWalks = adjacencyList.join(keyedRandomWalks)
                         .map {
                           case (node_id, (neighbours, walkSoFar)) => {
-                            val r = new Random(node_id)
+                            val r = new Random()
                             val randomNeighbour = neighbours(r.nextInt(neighbours.size))
                             (randomNeighbour, randomNeighbour :: walkSoFar )
                           } 

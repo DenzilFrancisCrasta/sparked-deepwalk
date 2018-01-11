@@ -24,6 +24,8 @@ maxVertices = max(y)
 
 xTicks = [i for i in range(15) if pow(10, i) < maxVisits] 
 yTicks = [i for i in range(15) if pow(10, i) < maxVertices] 
+xTicks.insert(0, -0.1)
+yTicks.insert(0, -0.1)
 
 logx = [math.log(v, 10) for v in x]
 logy = [math.log(v, 10) for v in y]
