@@ -20,11 +20,19 @@ object SparkedDeepWalkApp {
 
       Logger.getRootLogger().setLevel(Level.ERROR)
 
+     /*
       val DATASET_ROOT  = "datasets/BlogCatalog/data/"
       val EDGES_FILE    = "edges.csv"
       val NODES_FILE    = "nodes.csv"
       val LABELS_FILE   = "groups.csv"
       val NODE_TAG_FILE = "group-edges.csv" 
+      */
+      val DATASET_NAME  = args(1)
+      val DATASET_ROOT  = args(2) 
+      val NODES_FILE    = args(3) 
+      val EDGES_FILE    = args(4) 
+      val LABELS_FILE   = args(5) 
+      val NODE_TAG_FILE = args(6) 
 
       val edges = spark.read.textFile(DATASET_ROOT + EDGES_FILE).rdd
                        .flatMap { line => {

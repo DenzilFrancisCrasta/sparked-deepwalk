@@ -1,7 +1,33 @@
 #!/bin/bash
 
-DATASET_FILE=datasets/dataset.txt
-SAVE_PATH=/tmp
+SAVE_PATH=output
+
+if [ $1 = 'blog' ]
+then
+  DATASET_NAME="Blog Catalog"
+  DATASET_ROOT="datasets/BlogCatalog/data/"
+  EDGES_FILE="edges.csv"
+  NODES_FILE="nodes.csv"
+  LABELS_FILE="groups.csv"
+  NODE_TAG_FILE="group-edges.csv" 
+elif [ $1 = 'flickr' ]
+then
+  DATASET_NAME="Blog Catalog"
+  DATASET_ROOT="datasets/BlogCatalog/data/"
+  EDGES_FILE="edges.csv"
+  NODES_FILE="nodes.csv"
+  LABELS_FILE="groups.csv"
+  NODE_TAG_FILE="group-edges.csv" 
+elif [ $1 = 'youtube']
+then
+  DATASET_NAME="Blog Catalog"
+  DATASET_ROOT="datasets/BlogCatalog/data/"
+  EDGES_FILE="edges.csv"
+  NODES_FILE="nodes.csv"
+  LABELS_FILE="groups.csv"
+  NODE_TAG_FILE="group-edges.csv" 
+fi
+
 
 # build the dgtree
 time spark-submit --master local[2] \
@@ -9,6 +35,10 @@ time spark-submit --master local[2] \
                   --executor-memory 2g \
                   --driver-memory 1g \
                   target/scala-2.11/sparked-deepwalk_2.11-1.0.jar \
-                  $DATASET_FILE \
+                  $DATASET_NAME \
+                  $DATASET_ROOT \
+                  $NODES_FILE \
+                  $EDGES_FILE \
+                  $LABELS_FILE \
+                  $NODE_TAG_FILE \
                   $SAVE_PATH \
-#2> /dev/null
