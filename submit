@@ -6,9 +6,13 @@ then
   exit 1
 fi
 
+SAVE_PATH="output/"
+NO_OF_RANDOM_WALKS=3
+RANDOM_WALK_LENGTH=10
+
+
 DATASET=$1
 echo $DATASET
-SAVE_PATH="output/"
 
 if [ $DATASET = 'blog' ]
 then
@@ -39,7 +43,9 @@ time spark-submit --master local[8] \
                   $EDGES_FILE \
                   $LABELS_FILE \
                   $NODE_TAG_FILE \
-                  $SAVE_PATH 
+                  $SAVE_PATH \
+                  $RANDOM_WALK_LENGTH \
+                  $NO_OF_RANDOM_WALKS
 
 OUTPUT_SUFFIX="_vertex_visit_freq.csv"
 

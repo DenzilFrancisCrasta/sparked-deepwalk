@@ -7,9 +7,6 @@ import sys
 datafile = sys.argv[1]
 dataset = sys.argv[2]
 
-print(datafile)
-print(dataset)
-
 x = []
 y = []
 with open(datafile, 'rb') as csvfile:

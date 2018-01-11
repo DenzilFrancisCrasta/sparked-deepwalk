@@ -28,6 +28,10 @@ object SparkedDeepWalkApp {
       val NODE_TAG_FILE = args(5) 
       val OUTPUT_DIR    = args(6) 
 
+      
+      val RANDOM_WALK_LENGTH= args(7).toInt
+      val NO_OF_RANDOM_WALKS= args(8).toInt
+
       val edges = spark.read.textFile(DATASET_DIR + EDGES_FILE).rdd
                        .flatMap { line => {
                             val fields = line.split(",")
@@ -46,11 +50,10 @@ object SparkedDeepWalkApp {
                                .persist()
 
 
-      val LAMBDA = 10
 
       var keyedRandomWalks = adjacencyList.keys.map(id => (id, List(id)))
       
-      for (iter <- 1 until LAMBDA) {
+      for (iter <- 1 until RANDOM_WALK_LENGTH) {
         keyedRandomWalks = adjacencyList.join(keyedRandomWalks)
                         .map {
                           case (node_id, (neighbours, walkSoFar)) => {
