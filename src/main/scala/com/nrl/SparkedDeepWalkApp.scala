@@ -20,21 +20,15 @@ object SparkedDeepWalkApp {
 
       Logger.getRootLogger().setLevel(Level.ERROR)
 
-     /*
-      val DATASET_ROOT  = "datasets/BlogCatalog/data/"
-      val EDGES_FILE    = "edges.csv"
-      val NODES_FILE    = "nodes.csv"
-      val LABELS_FILE   = "groups.csv"
-      val NODE_TAG_FILE = "group-edges.csv" 
-      */
       val DATASET_NAME  = args(1)
-      val DATASET_ROOT  = args(2) 
+      val DATASET_DIR   = args(2) 
       val NODES_FILE    = args(3) 
       val EDGES_FILE    = args(4) 
       val LABELS_FILE   = args(5) 
       val NODE_TAG_FILE = args(6) 
+      val OUTPUT_DIR    = args(7) 
 
-      val edges = spark.read.textFile(DATASET_ROOT + EDGES_FILE).rdd
+      val edges = spark.read.textFile(DATASET_DIR + EDGES_FILE).rdd
                        .flatMap { line => {
                             val fields = line.split(",")
                             val a = fields(0).toLong
@@ -43,19 +37,14 @@ object SparkedDeepWalkApp {
                          }
                        }
 
-      val nodes  = spark.read.textFile(DATASET_ROOT + NODES_FILE).rdd.map(_.toLong)
-      val labels = spark.read.textFile(DATASET_ROOT + LABELS_FILE).rdd.map(_.toLong)
+      val nodes  = spark.read.textFile(DATASET_DIR + NODES_FILE).rdd.map(_.toLong)
+      val labels = spark.read.textFile(DATASET_DIR + LABELS_FILE).rdd.map(_.toLong)
 
       val adjacencyList = edges.groupByKey()
                                .mapValues(_.toArray)
                                .partitionBy(new HashPartitioner(100))
                                .persist()
 
-
-      adjacencyList.take(2).foreach(x => {
-        print(x._1 +" ")
-        x._2.foreach(print)
-      })
 
       val LAMBDA = 10
 
@@ -81,7 +70,7 @@ object SparkedDeepWalkApp {
                                           .groupBy(identity)
                                           .mapValues(_.size)
 
-      val writer = new PrintWriter(new File("degree_dist.csv"))
+      val writer = new PrintWriter(new File(OUTPUT_DIR + "degree_dist.csv"))
       writer.write("degree,frequency\n")
       degreeDistribution.foreach {
         case (k, v) => 
@@ -89,7 +78,7 @@ object SparkedDeepWalkApp {
       }
       writer.close()
 
-      println("Blog Catalog")
+      println(DATASET_NAME)
       println("|V| " + nodes.count)
       println("|E| " + edges.count)
       println("|Y| " + labels.count)

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-SAVE_PATH=output
+SAVE_PATH="output/"
 
 if [ $1 = 'blog' ]
 then
@@ -30,10 +30,8 @@ fi
 
 
 # build the dgtree
-time spark-submit --master local[2] \
+time spark-submit --master local[8] \
                   --class com.nrl.SparkedDeepWalkApp \
-                  --executor-memory 2g \
-                  --driver-memory 1g \
                   target/scala-2.11/sparked-deepwalk_2.11-1.0.jar \
                   $DATASET_NAME \
                   $DATASET_ROOT \
