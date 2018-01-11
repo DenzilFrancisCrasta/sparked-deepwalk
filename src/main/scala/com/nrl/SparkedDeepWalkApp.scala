@@ -20,13 +20,13 @@ object SparkedDeepWalkApp {
 
       Logger.getRootLogger().setLevel(Level.ERROR)
 
-      val DATASET_NAME  = args(1)
-      val DATASET_DIR   = args(2) 
-      val NODES_FILE    = args(3) 
-      val EDGES_FILE    = args(4) 
-      val LABELS_FILE   = args(5) 
-      val NODE_TAG_FILE = args(6) 
-      val OUTPUT_DIR    = args(7) 
+      val DATASET_NAME  = args(0)
+      val DATASET_DIR   = args(1) 
+      val NODES_FILE    = args(2) 
+      val EDGES_FILE    = args(3) 
+      val LABELS_FILE   = args(4) 
+      val NODE_TAG_FILE = args(5) 
+      val OUTPUT_DIR    = args(6) 
 
       val edges = spark.read.textFile(DATASET_DIR + EDGES_FILE).rdd
                        .flatMap { line => {
@@ -70,7 +70,7 @@ object SparkedDeepWalkApp {
                                           .groupBy(identity)
                                           .mapValues(_.size)
 
-      val writer = new PrintWriter(new File(OUTPUT_DIR + "degree_dist.csv"))
+      val writer = new PrintWriter(new File(OUTPUT_DIR + DATASET_NAME + "_vertex_visit_freq.csv"))
       writer.write("degree,frequency\n")
       degreeDistribution.foreach {
         case (k, v) => 

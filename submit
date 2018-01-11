@@ -1,27 +1,27 @@
 #!/bin/bash
 
+if [ $# -eq 0 ] 
+then
+  echo "Usage: submit dataset_name"
+  exit 1
+fi
+
+DATASET=$1
+echo $DATASET
 SAVE_PATH="output/"
 
-if [ $1 = 'blog' ]
+if [ $DATASET = 'blog' ]
 then
-  DATASET_NAME="Blog Catalog"
+  DATASET_NAME="BlogCatalog"
   DATASET_ROOT="datasets/BlogCatalog/data/"
   EDGES_FILE="edges.csv"
   NODES_FILE="nodes.csv"
   LABELS_FILE="groups.csv"
   NODE_TAG_FILE="group-edges.csv" 
-elif [ $1 = 'flickr' ]
+elif [ $DATASET = 'youtube' ]
 then
-  DATASET_NAME="Blog Catalog"
-  DATASET_ROOT="datasets/BlogCatalog/data/"
-  EDGES_FILE="edges.csv"
-  NODES_FILE="nodes.csv"
-  LABELS_FILE="groups.csv"
-  NODE_TAG_FILE="group-edges.csv" 
-elif [ $1 = 'youtube']
-then
-  DATASET_NAME="Blog Catalog"
-  DATASET_ROOT="datasets/BlogCatalog/data/"
+  DATASET_NAME="Youtube"
+  DATASET_ROOT="datasets/YouTube/data/"
   EDGES_FILE="edges.csv"
   NODES_FILE="nodes.csv"
   LABELS_FILE="groups.csv"
@@ -39,4 +39,8 @@ time spark-submit --master local[8] \
                   $EDGES_FILE \
                   $LABELS_FILE \
                   $NODE_TAG_FILE \
-                  $SAVE_PATH \
+                  $SAVE_PATH 
+
+OUTPUT_SUFFIX="_vertex_visit_freq.csv"
+
+python utils/degree_plot.py $SAVE_PATH$DATASET_NAME$OUTPUT_SUFFIX $DATASET_NAME 
