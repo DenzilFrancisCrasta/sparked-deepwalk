@@ -12,7 +12,6 @@ RANDOM_WALK_LENGTH=10
 
 
 DATASET=$1
-echo $DATASET
 
 if [ $DATASET = 'blog' ]
 then

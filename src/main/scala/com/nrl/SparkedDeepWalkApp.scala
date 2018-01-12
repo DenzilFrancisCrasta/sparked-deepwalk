@@ -10,6 +10,21 @@ import org.apache.spark.mllib.feature.{Word2Vec, Word2VecModel}
 
 object SparkedDeepWalkApp {
 
+    def parseArguments(args: Array[String]): Map[String, String] = {
+      Map(
+        "DATASET_NAME"  -> args(0),
+        "DATASET_DIR"   -> args(1),
+        "NODES_FILE"    -> args(2),
+        "EDGES_FILE"    -> args(3),
+        "LABELS_FILE"   -> args(4),
+        "NODE_TAG_FILE" -> args(5),
+        "OUTPUT_DIR"    -> args(6),
+        "RANDOM_WALK_LENGTH" -> args(7),
+        "NO_OF_RANDOM_WALKS" -> args(8)
+      )
+      
+    }
+
     def main(args: Array[String]) {
 
       val spark = SparkSession
@@ -21,19 +36,10 @@ object SparkedDeepWalkApp {
 
       Logger.getRootLogger().setLevel(Level.ERROR)
 
-      val DATASET_NAME  = args(0)
-      val DATASET_DIR   = args(1) 
-      val NODES_FILE    = args(2) 
-      val EDGES_FILE    = args(3) 
-      val LABELS_FILE   = args(4) 
-      val NODE_TAG_FILE = args(5) 
-      val OUTPUT_DIR    = args(6) 
 
-      
-      val RANDOM_WALK_LENGTH= args(7).toInt
-      val NO_OF_RANDOM_WALKS= args(8).toInt
+      val config = parseArguments(args)
 
-      val edges = spark.read.textFile(DATASET_DIR + EDGES_FILE).rdd
+      val edges = spark.read.textFile(config("DATASET_DIR") + config("EDGES_FILE")).rdd
                        .flatMap { line => {
                             val fields = line.split(",")
                             val a = fields(0).toLong
@@ -42,8 +48,8 @@ object SparkedDeepWalkApp {
                          }
                        }
 
-      val nodes  = spark.read.textFile(DATASET_DIR + NODES_FILE).rdd.map(_.toLong)
-      val labels = spark.read.textFile(DATASET_DIR + LABELS_FILE).rdd.map(_.toLong)
+      val nodes  = spark.read.textFile(config("DATASET_DIR") + config("NODES_FILE")).rdd.map(_.toLong)
+      val labels = spark.read.textFile(config("DATASET_DIR") + config("LABELS_FILE")).rdd.map(_.toLong)
 
       val adjacencyList = edges.groupByKey()
                                .mapValues(_.toArray)
@@ -54,7 +60,7 @@ object SparkedDeepWalkApp {
 
       var keyedRandomWalks = adjacencyList.keys.map(id => (id, List(id)))
       
-      for (iter <- 1 until RANDOM_WALK_LENGTH) {
+      for (iter <- 1 until config("RANDOM_WALK_LENGTH").toInt) {
         keyedRandomWalks = adjacencyList.join(keyedRandomWalks)
                         .map {
                           case (node_id, (neighbours, walkSoFar)) => {
@@ -74,7 +80,7 @@ object SparkedDeepWalkApp {
                                           .groupBy(identity)
                                           .mapValues(_.size)
 
-      val writer = new PrintWriter(new File(OUTPUT_DIR + DATASET_NAME + "_vertex_visit_freq.csv"))
+      val writer = new PrintWriter(new File(config("OUTPUT_DIR") + config("DATASET_NAME") + "_vertex_visit_freq.csv"))
       writer.write("numberOfVisits,numberOfVertices\n")
       vertexVisitCounts.foreach {
         case (k, v) => 
@@ -82,7 +88,7 @@ object SparkedDeepWalkApp {
       }
       writer.close()
 
-      println(DATASET_NAME)
+      println(config("DATASET_NAME"))
       println("|V| " + nodes.count)
       println("|E| " + edges.count)
       println("|Y| " + labels.count)
@@ -91,8 +97,8 @@ object SparkedDeepWalkApp {
 
 
       val word2vec = new Word2Vec()
-      val model = word2vec.fit(randomWalks.map(_.map(_.toString)))
-      val vectors = model.getVectors
+      val model    = word2vec.fit(randomWalks.map(_.map(_.toString)))
+      val vectors  = model.getVectors
 
       vectors.take(2).foreach(println)
 
