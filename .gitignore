@@ -4,6 +4,7 @@
 target/
 images/
 datasets/
+output/
 spark-warehouse/
 metastore_db/
 logs/
