@@ -37,30 +37,25 @@ class HyperGraph(edges: RDD[(Long, Long)]) {
      
     /** renders the graph using graphviz library */
     def render(filename: String, directory: String)  = { 
-      /*
+
+        import scala.collection.immutable.Map
+
         val gv = new com.liangdp.graphviz4s.Graph()
-        var k = 0 
-        for ( v <- vertexLabels) {
-            gv.node(k.toString(),label=v,attrs=Map("shape"->"plaintext"))
-                k = k+1 
+
+        val adj = adjacencyList.values.collect 
+
+        for ( v <- 1 to adj.size) {
+            gv.node(v.toString,label=v.toString)
         }   
 
-        for ( i <- 0 to adjacencyList.length-1) {
-            for ( e <- adjacencyList(i) )  {
-                if( e._1 > i) {
-                    val col = new StringBuilder("\"black")
-                        for (_ <- 2 to e._2 ) { 
-                            col.append(":white:black")
-                        }
-                    col.append("\"")
-                        gv.edge(i.toString(),e._1.toString(),attrs=Map("color"->col.toString()))
-                }
+        for ( i <- 0 to adj.size -1) {
+            for ( e <- adj(i) )  {
+                gv.edge((i+1).toString(),e.toString())
             }
         }   
         println(gv.source())
-        gv.render(engine="neato", format="png", fileName=filename, directory = directory)
+        gv.render(engine="dot", format="png", fileName=filename, directory = directory)
 
-        */
     }   
 
 }

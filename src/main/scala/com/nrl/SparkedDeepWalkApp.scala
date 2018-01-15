@@ -88,6 +88,7 @@ object SparkedDeepWalkApp {
 //      val nodes  = spark.read.textFile(config("DATASET_DIR") + config("NODES_FILE")).rdd.map(_.toLong)
  //     val labels = spark.read.textFile(config("DATASET_DIR") + config("LABELS_FILE")).rdd.map(_.toLong)
 
+      G.render(config("DATASET_NAME"), config("OUTPUT_DIR"))
 
       // generate random walks of configured length
       val randomWalks = G.getRandomWalks(config("RANDOM_WALK_LENGTH").toInt)
