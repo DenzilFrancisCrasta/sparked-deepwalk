@@ -13,7 +13,23 @@ RANDOM_WALK_LENGTH=10
 
 DATASET=$1
 
-if [ $DATASET = 'blog' ]
+if [ $DATASET = 'karate' ]
+then
+  DATASET_NAME="Karate_Club"
+  DATASET_ROOT="datasets/Zachary/"
+
+  time spark-submit --master local[8] \
+                  --jars lib/Graphviz4S-1.0-SNAPSHOT.jar \
+                  --class com.nrl.SparkedDeepWalkApp \
+                  target/scala-2.11/sparked-deepwalk_2.11-1.0.jar \
+                  $DATASET_NAME \
+                  $DATASET_ROOT \
+                  "karate.dat" \
+                  $SAVE_PATH \
+                  $RANDOM_WALK_LENGTH \
+                  $NO_OF_RANDOM_WALKS
+
+elif [ $DATASET = 'blog' ]
 then
   DATASET_NAME="BlogCatalog"
   DATASET_ROOT="datasets/BlogCatalog/data/"
@@ -31,9 +47,10 @@ then
   NODE_TAG_FILE="group-edges.csv" 
 fi
 
-
-# build the dgtree
+if [ $DATASET != "karate" ]
+then 
 time spark-submit --master local[8] \
+                  --jars lib/Graphviz4S-1.0-SNAPSHOT.jar \
                   --class com.nrl.SparkedDeepWalkApp \
                   target/scala-2.11/sparked-deepwalk_2.11-1.0.jar \
                   $DATASET_NAME \
@@ -45,6 +62,7 @@ time spark-submit --master local[8] \
                   $SAVE_PATH \
                   $RANDOM_WALK_LENGTH \
                   $NO_OF_RANDOM_WALKS
+fi
 
 OUTPUT_SUFFIX="_vertex_visit_freq.csv"
 
