@@ -95,7 +95,7 @@ object HyperGraph {
       val edges:Array[(Long, Long)] 
             = lines.zipWithIndex
                    .flatMap{ case (line: String, i: Int) => {
-                               val fields = line.split(separator)
+                               val fields = line.trim().split(separator)
                                fields.map(_.toLong)
                                      .filter(_ == 1)
                                      .zipWithIndex

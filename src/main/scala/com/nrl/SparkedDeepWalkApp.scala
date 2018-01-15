@@ -34,7 +34,7 @@ object SparkedDeepWalkApp {
     }
 
     def parseArguments(args: Array[String]): Map[String, String] = {
-      if (args(0) != "karate") {
+      if (args(0) != "Karate_Club") {
         Map(
           "DATASET_NAME"  -> args(0),
           "DATASET_DIR"   -> args(1),
@@ -52,9 +52,9 @@ object SparkedDeepWalkApp {
           "DATASET_NAME"  -> args(0),
           "DATASET_DIR"   -> args(1),
           "DATASET_FILE"  -> args(2),
-          "OUTPUT_DIR"    -> args(6),
-          "RANDOM_WALK_LENGTH" -> args(7),
-          "NO_OF_RANDOM_WALKS" -> args(8)
+          "OUTPUT_DIR"    -> args(3),
+          "RANDOM_WALK_LENGTH" -> args(4),
+          "NO_OF_RANDOM_WALKS" -> args(5)
         )
         
       }
@@ -76,8 +76,8 @@ object SparkedDeepWalkApp {
       val config = parseArguments(args)
 
       // build the hypergraph from the serialized graph representations
-      val G = if (config("DATASET_NAME") == "karate") {
-                val filepath = config("DATASET_DIR") + config("EDGES_FILE");
+      val G = if (config("DATASET_NAME") == "Karate_Club") {
+                val filepath = config("DATASET_DIR") + config("DATASET_FILE");
                 HyperGraph.adjacencyMatrixFile(spark, filepath)
               } else {
                 val filepath = config("DATASET_DIR") + config("EDGES_FILE");
