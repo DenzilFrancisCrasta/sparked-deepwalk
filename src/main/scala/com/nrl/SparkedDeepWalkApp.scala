@@ -9,27 +9,26 @@ import org.apache.spark.mllib.feature.{Word2Vec, Word2VecModel}
 
 object SparkedDeepWalkApp {
 
-    def writeCSVFile(
+    def writeCSVFile[T](
           path: String,
           schema: Array[String],
-          data: Array[(Long, Long)]) = {
+          data: Array[Array[T]]) = {
       val writer = new PrintWriter(new File(path))
       writer.write(schema.mkString(",")+"\n")
-      data.foreach {
-        case (k, v) => 
-          writer.write(k +","+ v+"\n")
-      }
+      data.foreach {(x: Array[T]) => writer.write(x.mkString(",")+"\n") }
       writer.close()
     }
 
             
     
-    def vertexVisitCounts(walks: RDD[List[Long]]): Map[Long, Long] = {
+    def vertexVisitCounts(walks: RDD[List[Long]]): Array[Array[Long]] = {
       walks.flatMap((walk: List[Long]) => walk)
            .countByValue
            .values
            .groupBy(identity)
            .mapValues(_.size)
+           .map(kv => Array(kv._1, kv._2))
+           .toArray
       
     }
 
@@ -96,24 +95,26 @@ object SparkedDeepWalkApp {
 
 
 
-     // println(config("DATASET_NAME"))
-//      println("|V| " + nodes.count)
- //     println("|E| " + edges.count)
-  //    println("|Y| " + labels.count)
-    //  println("Adjacency List |V|" + adjacencyList.count)
+       // println(config("DATASET_NAME"))
+       // println("|V| " + nodes.count)
+       // println("|E| " + edges.count)
+       // println("|Y| " + labels.count)
+       // println("Adjacency List |V|" + adjacencyList.count)
       println("Random Walk |V|" + randomWalks.count)
 
 
-      val word2vec = new Word2Vec()
+      val word2vec = (new Word2Vec()).setVectorSize(2)
       val model    = word2vec.fit(randomWalks.map(_.map(_.toString)))
-      val vectors  = model.getVectors
+      val vectors  = model.getVectors.values.toArray
 
-      vectors.take(2).foreach(println)
+      val vectorFile = config("OUTPUT_DIR") + config("DATASET_NAME")  + "_vec.csv"
+      writeCSVFile[Float](vectorFile, Array("dim1", "dim2"), vectors)
+
 
       val visits = vertexVisitCounts(randomWalks)
       val outputFile = config("OUTPUT_DIR") + config("DATASET_NAME") + "_vertex_visit_freq.csv"
       val schema = Array("numberOfVisits" ,"numberOfVertices") 
-      writeCSVFile(outputFile, schema, visits.toArray)
+      writeCSVFile[Long](outputFile, schema, visits.toArray)
 
       spark.stop()
 

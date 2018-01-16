@@ -8,7 +8,7 @@ fi
 
 SAVE_PATH="output/"
 NO_OF_RANDOM_WALKS=3
-RANDOM_WALK_LENGTH=10
+RANDOM_WALK_LENGTH=100
 
 
 DATASET=$1
@@ -66,4 +66,5 @@ fi
 
 OUTPUT_SUFFIX="_vertex_visit_freq.csv"
 
-python utils/degree_plot.py $SAVE_PATH$DATASET_NAME$OUTPUT_SUFFIX $DATASET_NAME 
+python utils/plot.py $SAVE_PATH$DATASET_NAME$OUTPUT_SUFFIX $DATASET_NAME 
+
