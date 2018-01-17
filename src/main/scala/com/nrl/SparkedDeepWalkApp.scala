@@ -43,7 +43,8 @@ object SparkedDeepWalkApp {
           "NODE_TAG_FILE" -> args(5),
           "OUTPUT_DIR"    -> args(6),
           "RANDOM_WALK_LENGTH" -> args(7),
-          "NO_OF_RANDOM_WALKS" -> args(8)
+          "NO_OF_RANDOM_WALKS" -> args(8),
+          "VECTOR_DIM" -> args(9)
         )
       }
       else {
@@ -53,7 +54,8 @@ object SparkedDeepWalkApp {
           "DATASET_FILE"  -> args(2),
           "OUTPUT_DIR"    -> args(3),
           "RANDOM_WALK_LENGTH" -> args(4),
-          "NO_OF_RANDOM_WALKS" -> args(5)
+          "NO_OF_RANDOM_WALKS" -> args(5),
+          "VECTOR_DIM" -> args(6)
         )
         
       }
@@ -90,7 +92,9 @@ object SparkedDeepWalkApp {
       G.render(config("DATASET_NAME"), config("OUTPUT_DIR"))
 
       // generate random walks of configured length
-      val randomWalks = G.getRandomWalks(config("RANDOM_WALK_LENGTH").toInt)
+      val randomWalks = G.getRandomWalks(
+        config("RANDOM_WALK_LENGTH").toInt, 
+        config("NO_OF_RANDOM_WALKS").toInt )
       randomWalks.persist()
 
 
@@ -103,7 +107,7 @@ object SparkedDeepWalkApp {
       println("Random Walk |V|" + randomWalks.count)
 
 
-      val word2vec = (new Word2Vec()).setVectorSize(2)
+      val word2vec = (new Word2Vec()).setVectorSize(config("VECTOR_DIM").toInt)
       val model    = word2vec.fit(randomWalks.map(_.map(_.toString)))
       val vectors  = model.getVectors.values.toArray
 

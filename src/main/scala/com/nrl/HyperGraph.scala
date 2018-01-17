@@ -13,7 +13,7 @@ class HyperGraph(edges: RDD[(Long, Long)]) {
                              .partitionBy(new HashPartitioner(100))
                              .persist()
 
-    def getRandomWalks(walkLength: Int): RDD[List[Long]] = {
+    def getSingleRandomWalks(walkLength: Int): RDD[List[Long]] = {
 
       // Bootstrap the random walk from every vertex 
       var keyedRandomWalks = adjacencyList.keys.map(id => (id, List(id)))
@@ -34,6 +34,16 @@ class HyperGraph(edges: RDD[(Long, Long)]) {
 
       keyedRandomWalks.values
     }
+
+    def getRandomWalks(
+      walkLength: Int, 
+      walksPerVertex: Int): RDD[List[Long]] = {
+
+      val walks = for (i <- 1 to walksPerVertex) 
+        yield getSingleRandomWalks(walkLength) 
+      walks.reduceLeft(_ union _)
+      
+    }  
      
     /** renders the graph using graphviz library */
     def render(filename: String, directory: String)  = { 
@@ -53,7 +63,7 @@ class HyperGraph(edges: RDD[(Long, Long)]) {
                 gv.edge((i+1).toString(),e.toString())
             }
         }   
-        println(gv.source())
+        //println(gv.source())
         gv.render(engine="dot", format="png", fileName=filename, directory = directory)
 
     }   
@@ -105,8 +115,4 @@ object HyperGraph {
       new HyperGraph(spark.sparkContext.parallelize(edges))
     
   }
-      
-
-  
-  
 }
