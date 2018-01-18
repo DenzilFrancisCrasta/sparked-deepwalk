@@ -54,6 +54,8 @@ plot(
   yTicks)
 
 
+
+'''
 data = readCSV("output/"+ dataset +"_vec.csv", ["dim1", "dim2"])
 x = [float(a) for a in data[0][:]]
 y = [float(a) for a in data[1][:]]
@@ -65,6 +67,7 @@ plot(
   y,
   'bo')
 
+'''
 
 
 

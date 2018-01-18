@@ -7,9 +7,9 @@ then
 fi
 
 SAVE_PATH="output/"
-NO_OF_RANDOM_WALKS=30
+NO_OF_RANDOM_WALKS=10
 RANDOM_WALK_LENGTH=20
-VECTOR_DIM=2
+VECTOR_DIM=100
 
 
 DATASET=$1
@@ -72,3 +72,5 @@ OUTPUT_SUFFIX="_vertex_visit_freq.csv"
 
 python utils/plot.py $SAVE_PATH$DATASET_NAME$OUTPUT_SUFFIX $DATASET_NAME 
 
+VEC_SUFFIX="_vec.txt"
+python utils/scoring.py --emb output/$DATASET_NAME$VEC_SUFFIX --network datasets/$DATASET_NAME/$DATASET_NAME".mat"

@@ -3,6 +3,7 @@ package com.nrl
 import org.apache.spark.sql._
 import org.apache.log4j.{Level, Logger}
 import org.apache.spark.rdd.RDD
+import scala.collection.immutable.ListMap
 import java.io._
 
 import org.apache.spark.mllib.feature.{Word2Vec, Word2VecModel}
@@ -18,6 +19,21 @@ object SparkedDeepWalkApp {
       data.foreach {(x: Array[T]) => writer.write(x.mkString(",")+"\n") }
       writer.close()
     }
+
+    def saveVectors(
+      path: String, 
+      header: Array[Int],
+      data: Map[String, Array[Float]]) = {
+        
+      val writer = new PrintWriter(new File(path))
+      writer.write(header.mkString(" ")+"\n")
+      data.foreach { 
+        case (node:String, vec: Array[Float]) => 
+          writer.write(node+" "+ vec.mkString(" ") +"\n")
+      }
+      writer.close()
+    }
+      
 
             
     
@@ -89,7 +105,7 @@ object SparkedDeepWalkApp {
 //      val nodes  = spark.read.textFile(config("DATASET_DIR") + config("NODES_FILE")).rdd.map(_.toLong)
  //     val labels = spark.read.textFile(config("DATASET_DIR") + config("LABELS_FILE")).rdd.map(_.toLong)
 
-      G.render(config("DATASET_NAME"), config("OUTPUT_DIR"))
+      //G.render(config("DATASET_NAME"), config("OUTPUT_DIR"))
 
       // generate random walks of configured length
       val randomWalks = G.getRandomWalks(
@@ -107,12 +123,18 @@ object SparkedDeepWalkApp {
       println("Random Walk |V|" + randomWalks.count)
 
 
-      val word2vec = (new Word2Vec()).setVectorSize(config("VECTOR_DIM").toInt)
+      val word2vec = (new Word2Vec())
+        .setVectorSize(config("VECTOR_DIM").toInt)
+        .setWindowSize(10)
       val model    = word2vec.fit(randomWalks.map(_.map(_.toString)))
-      val vectors  = model.getVectors.values.toArray
+      
+      //val vectors  = model.getVectors.values.toArray
+      val vectors  = model.getVectors
+      val sortedVectors = ListMap(vectors.toSeq.sortBy(_._1):_*)
 
-      val vectorFile = config("OUTPUT_DIR") + config("DATASET_NAME")  + "_vec.csv"
-      writeCSVFile[Float](vectorFile, Array("dim1", "dim2"), vectors)
+      val vectorFile = config("OUTPUT_DIR") + config("DATASET_NAME")  + "_vec.txt"
+      //writeCSVFile[Float](vectorFile, Array(, "dim2"), vectors)
+      saveVectors(vectorFile, Array(vectors.size, config("VECTOR_DIM").toInt), sortedVectors)
 
 
       val visits = vertexVisitCounts(randomWalks)
