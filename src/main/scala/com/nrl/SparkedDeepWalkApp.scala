@@ -123,24 +123,23 @@ object SparkedDeepWalkApp {
       println("Random Walk |V|" + randomWalks.count)
 
 
-      val word2vec = (new Word2Vec())
-        .setVectorSize(config("VECTOR_DIM").toInt)
-        .setWindowSize(10)
-      val model    = word2vec.fit(randomWalks.map(_.map(_.toString)))
+   //   val word2vec = (new Word2Vec())
+    //    .setVectorSize(config("VECTOR_DIM").toInt)
+     //   .setWindowSize(10)
+     // val model    = word2vec.fit(randomWalks.map(_.map(_.toString)))
       
       //val vectors  = model.getVectors.values.toArray
-      val vectors  = model.getVectors
-      val sortedVectors = ListMap(vectors.toSeq.sortBy(_._1):_*)
+     // val vectors  = model.getVectors
+     // val sortedVectors = ListMap(vectors.toSeq.sortBy(_._1):_*)
 
-      val vectorFile = config("OUTPUT_DIR") + config("DATASET_NAME")  + "_vec.txt"
-      //writeCSVFile[Float](vectorFile, Array(, "dim2"), vectors)
-      saveVectors(vectorFile, Array(vectors.size, config("VECTOR_DIM").toInt), sortedVectors)
+      //val vectorFile = config("OUTPUT_DIR") + config("DATASET_NAME")  + "_vec.txt"
+      //saveVectors(vectorFile, Array(vectors.size, config("VECTOR_DIM").toInt), vectors)
 
 
-      val visits = vertexVisitCounts(randomWalks)
-      val outputFile = config("OUTPUT_DIR") + config("DATASET_NAME") + "_vertex_visit_freq.csv"
-      val schema = Array("numberOfVisits" ,"numberOfVertices") 
-      writeCSVFile[Long](outputFile, schema, visits.toArray)
+//      val visits = vertexVisitCounts(randomWalks)
+ //     val outputFile = config("OUTPUT_DIR") + config("DATASET_NAME") + "_vertex_visit_freq.csv"
+  //    val schema = Array("numberOfVisits" ,"numberOfVertices") 
+   //   writeCSVFile[Long](outputFile, schema, visits.toArray)
 
       spark.stop()
 
