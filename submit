@@ -73,4 +73,4 @@ OUTPUT_SUFFIX="_vertex_visit_freq.csv"
 python utils/plot.py $SAVE_PATH$DATASET_NAME$OUTPUT_SUFFIX $DATASET_NAME 
 
 VEC_SUFFIX="_vec.txt"
-python utils/scoring.py --emb output/$DATASET_NAME$VEC_SUFFIX --network datasets/$DATASET_NAME/$DATASET_NAME".mat"
+#python utils/scoring.py --emb output/$DATASET_NAME$VEC_SUFFIX --network datasets/$DATASET_NAME/$DATASET_NAME".mat"

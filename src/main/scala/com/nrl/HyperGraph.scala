@@ -35,6 +35,7 @@ class HyperGraph(edges: RDD[(Long, Long)]) {
       keyedRandomWalks.values
     }
 
+
     def getRandomWalks(
       walkLength: Int, 
       walksPerVertex: Int): RDD[List[Long]] = {
