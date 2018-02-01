@@ -54,7 +54,7 @@ fi
 
 if [ $DATASET != "karate" ]
 then 
-time spark-submit --master spark://10.6.15.145:7077 \
+time spark-submit --master local[*] \
                   --executor-memory 6g \
                   --driver-memory 6g \
                   --jars lib/Graphviz4S-1.0-SNAPSHOT.jar \

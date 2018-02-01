@@ -2,6 +2,7 @@ package com.nrl;
 
 import org.apache.spark.sql._
 import org.apache.spark.HashPartitioner
+import org.apache.spark.storage.StorageLevel
 import scala.util.Random
 import scala.io.Source
 import org.apache.spark.rdd.RDD
@@ -10,25 +11,33 @@ class HyperGraph(edges: RDD[(Long, Long)]) {
 
     val adjacencyList = edges.groupByKey()
                              .mapValues(_.toArray)
-                             .partitionBy(new HashPartitioner(100))
-                             .persist()
+                             .persist(StorageLevel.MEMORY_AND_DISK)
+                             //.partitionBy(new HashPartitioner(100))
 
-    def getSingleRandomWalks(walkLength: Int): RDD[List[Long]] = {
+    def getSingleRandomWalks(walkLength: Int): RDD[Array[Long]] = {
 
       // Bootstrap the random walk from every vertex 
-      var keyedRandomWalks = adjacencyList.keys.map(id => (id, List(id)))
+      var keyedRandomWalks = adjacencyList.keys.map(id => { 
+          val walk = new Array[Long](walkLength)
+          walk(0) = id
+          (id, walk)
+        })
       
       // Grow the walk choosing a random neighbour uniformly at random
       for (iter <- 1 until walkLength) {
-        keyedRandomWalks = 
+        val grownRandomWalks = 
           adjacencyList.join(keyedRandomWalks)
                        .map {
-                          case (node_id, (neighbours, walkSoFar)) => {
+                          case (node_id, (neighbours, walk)) => {
                             val r = new Random()
                             val randomNeighbour = neighbours(r.nextInt(neighbours.size))
-                            (randomNeighbour, randomNeighbour :: walkSoFar )
+                            walk(iter) = randomNeighbour
+                            (randomNeighbour, walk )
                           } 
                         }
+
+         keyedRandomWalks.unpersist()
+         keyedRandomWalks = grownRandomWalks
 
       }
 
@@ -38,7 +47,7 @@ class HyperGraph(edges: RDD[(Long, Long)]) {
 
     def getRandomWalks(
       walkLength: Int, 
-      walksPerVertex: Int): RDD[List[Long]] = {
+      walksPerVertex: Int): RDD[Array[Long]] = {
 
       val walks = for (i <- 1 to walksPerVertex) 
         yield getSingleRandomWalks(walkLength) 

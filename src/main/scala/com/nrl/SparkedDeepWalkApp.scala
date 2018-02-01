@@ -1,6 +1,7 @@
 package com.nrl
 
 import org.apache.spark.sql._
+import org.apache.spark.storage.StorageLevel
 import org.apache.log4j.{Level, Logger}
 import org.apache.spark.rdd.RDD
 import scala.collection.immutable.ListMap
@@ -85,66 +86,70 @@ object SparkedDeepWalkApp {
 
       // setup spark session 
       val spark = SparkSession
-                    .builder()
-                    .appName("Sparked DeepWalk")
-                    .getOrCreate()
+                      .builder()
+                      .appName("Sparked DeepWalk")
+                      .getOrCreate()
+      try {
 
-      import spark.implicits._
-      Logger.getRootLogger().setLevel(Level.ERROR)
-
-
-      val config = parseArguments(args)
-
-      // build the hypergraph from the serialized graph representations
-      val G = if (config("DATASET_NAME") == "Karate_Club") {
-                val filepath = config("DATASET_DIR") + config("DATASET_FILE");
-                HyperGraph.adjacencyMatrixFile(spark, filepath)
-              } else {
-                val filepath = config("DATASET_DIR") + config("EDGES_FILE");
-                HyperGraph.edgeListFile(spark, filepath)
-              }
+        import spark.implicits._
+        Logger.getRootLogger().setLevel(Level.ERROR)
 
 
-//      val nodes  = spark.read.textFile(config("DATASET_DIR") + config("NODES_FILE")).rdd.map(_.toLong)
- //     val labels = spark.read.textFile(config("DATASET_DIR") + config("LABELS_FILE")).rdd.map(_.toLong)
+        val config = parseArguments(args)
 
-      //G.render(config("DATASET_NAME"), config("OUTPUT_DIR"))
-
-      // generate random walks of configured length
-      val randomWalks = G.getRandomWalks(
-        config("RANDOM_WALK_LENGTH").toInt, 
-        config("NO_OF_RANDOM_WALKS").toInt )
-      randomWalks.persist()
-
-
-
-       // println(config("DATASET_NAME"))
-       // println("|V| " + nodes.count)
-       // println("|E| " + edges.count)
-       // println("|Y| " + labels.count)
-       // println("Adjacency List |V|" + adjacencyList.count)
-      println("Random Walk |V|" + randomWalks.count)
+        // build the hypergraph from the serialized graph representations
+        val G = if (config("DATASET_NAME") == "Karate_Club") {
+                  val filepath = config("DATASET_DIR") + config("DATASET_FILE");
+                  HyperGraph.adjacencyMatrixFile(spark, filepath)
+                } else {
+                  val filepath = config("DATASET_DIR") + config("EDGES_FILE");
+                  HyperGraph.edgeListFile(spark, filepath)
+                }
 
 
-      val word2vec = (new Word2Vec())
-        .setNumPartitions(config("NUM_PARTITIONS").toInt)
-        .setNumIterations(config("NUM_ITERATIONS").toInt)
-        .setVectorSize(config("VECTOR_DIM").toInt)
-        .setWindowSize(config("WINDOW_SIZE").toInt)
-      val model    = word2vec.fit(randomWalks.map(_.map(_.toString)))
-      
-      val vectors  = model.getVectors
+  //      val nodes  = spark.read.textFile(config("DATASET_DIR") + config("NODES_FILE")).rdd.map(_.toLong)
+   //     val labels = spark.read.textFile(config("DATASET_DIR") + config("LABELS_FILE")).rdd.map(_.toLong)
 
-      val vectorFile = config("OUTPUT_DIR") + config("DATASET_NAME")  + "_vec.txt"
-      saveVectors(vectorFile, Array(vectors.size, config("VECTOR_DIM").toInt), vectors)
+        //G.render(config("DATASET_NAME"), config("OUTPUT_DIR"))
+
+        // generate random walks of configured length
+        val randomWalks = G.getRandomWalks(
+          config("RANDOM_WALK_LENGTH").toInt, 
+          config("NO_OF_RANDOM_WALKS").toInt )
+        randomWalks.persist(StorageLevel.MEMORY_AND_DISK)
 
 
-  //    val visits = vertexVisitCounts(randomWalks)
-   //   val outputFile = config("OUTPUT_DIR") + config("DATASET_NAME") + "_vertex_visit_freq.csv"
-  //    val schema = Array("numberOfVisits" ,"numberOfVertices") 
-   //   writeCSVFile[Long](outputFile, schema, visits.toArray)
 
-      spark.stop()
+         // println(config("DATASET_NAME"))
+         // println("|V| " + nodes.count)
+         // println("|E| " + edges.count)
+         // println("|Y| " + labels.count)
+         // println("Adjacency List |V|" + adjacencyList.count)
+        println("Random Walk |V|" + randomWalks.count)
+
+
+        val word2vec = (new Word2Vec())
+          .setNumPartitions(config("NUM_PARTITIONS").toInt)
+          .setNumIterations(config("NUM_ITERATIONS").toInt)
+          .setVectorSize(config("VECTOR_DIM").toInt)
+          .setWindowSize(config("WINDOW_SIZE").toInt)
+        val model    = word2vec.fit(randomWalks.map(_.map(_.toString).toIterable))
+        
+        val vectors  = model.getVectors
+
+        val vectorFile = config("OUTPUT_DIR") + config("DATASET_NAME")  + "_vec.txt"
+        saveVectors(vectorFile, Array(vectors.size, config("VECTOR_DIM").toInt), vectors)
+
+
+    //    val visits = vertexVisitCounts(randomWalks)
+     //   val outputFile = config("OUTPUT_DIR") + config("DATASET_NAME") + "_vertex_visit_freq.csv"
+    //    val schema = Array("numberOfVisits" ,"numberOfVertices") 
+     //   writeCSVFile[Long](outputFile, schema, visits.toArray)
+
+      }
+      finally {
+        spark.stop()
+      }
 
     }
 }
