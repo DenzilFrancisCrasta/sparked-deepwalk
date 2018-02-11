@@ -75,7 +75,10 @@ object SparkedDeepWalkApp {
           "OUTPUT_DIR"         -> args(3),
           "RANDOM_WALK_LENGTH" -> args(4),
           "NO_OF_RANDOM_WALKS" -> args(5),
-          "VECTOR_DIM"         -> args(6)
+          "VECTOR_DIM"         -> args(6),
+          "NUM_PARTITIONS"     -> args(7),
+          "NUM_ITERATIONS"     -> args(8),
+          "WINDOW_SIZE"        -> args(9)
         )
         
       }
@@ -138,7 +141,7 @@ object SparkedDeepWalkApp {
         val vectors  = model.getVectors
 
         val vectorFile = config("OUTPUT_DIR") + config("DATASET_NAME")  + "_vec.txt"
-        saveVectors(vectorFile, Array(vectors.size, config("VECTOR_DIM").toInt), vectors)
+      saveVectors(vectorFile, Array(vectors.size, config("VECTOR_DIM").toInt), vectors)
 
 
     //    val visits = vertexVisitCounts(randomWalks)

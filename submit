@@ -7,7 +7,7 @@ then
 fi
 
 SAVE_PATH="output/"
-NO_OF_RANDOM_WALKS=60
+NO_OF_RANDOM_WALKS=40
 RANDOM_WALK_LENGTH=10
 VECTOR_DIM=128
 NUM_PARTITIONS=1
@@ -55,8 +55,8 @@ fi
 if [ $DATASET != "karate" ]
 then 
 time spark-submit --master local[*] \
-                  --executor-memory 6g \
-                  --driver-memory 6g \
+                  --executor-memory 3g \
+                  --driver-memory 1g \
                   --jars lib/Graphviz4S-1.0-SNAPSHOT.jar \
                   --class com.nrl.SparkedDeepWalkApp \
                   target/scala-2.11/sparked-deepwalk_2.11-1.0.jar \
@@ -76,7 +76,6 @@ time spark-submit --master local[*] \
 fi
 
 OUTPUT_SUFFIX="_vertex_visit_freq.csv"
-
 python utils/plot.py $SAVE_PATH$DATASET_NAME$OUTPUT_SUFFIX $DATASET_NAME 
 
 VEC_SUFFIX="_vec.txt"

@@ -7,6 +7,8 @@ __author__      = "Bryan Perozzi"
 import numpy
 import sys
 
+import csv
+
 from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
 from collections import defaultdict
 from gensim.models import Word2Vec, KeyedVectors
@@ -17,6 +19,7 @@ from sklearn.metrics import f1_score
 from scipy.io import loadmat
 from sklearn.utils import shuffle as skshuffle
 from sklearn.preprocessing import MultiLabelBinarizer
+from collections import defaultdict
 
 class TopKRanker(OneVsRestClassifier):
     def predict(self, X, top_k_list):
@@ -41,12 +44,10 @@ def main():
                           formatter_class=ArgumentDefaultsHelpFormatter,
                           conflict_handler='resolve')
   parser.add_argument("--emb", required=True, help='Embeddings file')
-  parser.add_argument("--network", required=True,
-                      help='A .mat file containing the adjacency matrix and node labels of the input network.')
-  parser.add_argument("--adj-matrix-name", default='network',
-                      help='Variable name of the adjacency matrix inside the .mat file.')
-  parser.add_argument("--label-matrix-name", default='group',
-                      help='Variable name of the labels matrix inside the .mat file.')
+  parser.add_argument("--edgelist", required=True,
+                      help='A csv file containing the edges of the input network.')
+  parser.add_argument("--labellist", required=True,
+                      help='A csv file containing the labels of the nodes from the  input network.')
   parser.add_argument("--num-shuffles", default=2, type=int, help='Number of shuffles.')
   parser.add_argument("--all", default=False, action='store_true',
                       help='The embeddings are evaluated on all training percents from 10 to 90 when this flag is set to true. '
@@ -55,21 +56,50 @@ def main():
   args = parser.parse_args()
   # 0. Files
   embeddings_file = args.emb
-  matfile = args.network
+  edgelist_file = args.edgelist
+  labellist_file = args.labellist
   
   # 1. Load Embeddings
   model = KeyedVectors.load_word2vec_format(embeddings_file, binary=False)
   
   # 2. Load labels
-  mat = loadmat(matfile)
-  A = mat[args.adj_matrix_name]
-  graph = sparse2graph(A)
-  labels_matrix = mat[args.label_matrix_name]
-  labels_count = labels_matrix.shape[1]
+  #mat = loadmat(matfile)
+  #A = mat[args.adj_matrix_name]
+  #graph = sparse2graph(A)
+
+  
+  graph_nodes = set()
+
+  with open(edgelist_file) as edge_file:
+    reader = csv.DictReader(edge_file, ['vertex_1', 'vertex_2'])
+    for row in reader:
+      graph_nodes.add(row['vertex_1'])
+      graph_nodes.add(row['vertex_2'])
+
+
+  labels_map = defaultdict(list)
+
+  with open(labellist_file) as label_file:
+    reader = csv.DictReader(label_file, ['vertex', 'label'])
+    for row in reader:
+      labels_map[row['vertex']].append(int(row['label']))
+
+  ordered_labels = [labels_map[str(node)] for node in range(1,len(graph_nodes)+1)]
+
+  all_labels = set()
+  for l in labels_map.itervalues():
+    all_labels |= set(l)
+
+  #labels_matrix = mat[args.label_matrix_name]
+  labels_count = len(all_labels)
   mlb = MultiLabelBinarizer(range(labels_count))
+ 
+  llb = MultiLabelBinarizer(range(1, labels_count+1), sparse_output=True)
+  labels_matrix = llb.fit_transform(ordered_labels)
+
   
   # Map nodes to their features (note:  assumes nodes are labeled as integers 1:N)
-  features_matrix = numpy.asarray([model[str(node)] for node in range(1,len(graph)+1)])
+  features_matrix = numpy.asarray([model[str(node)] for node in range(1,len(graph_nodes)+1)])
   
   # 2. Shuffle, to create train/test groups
   shuffles = []

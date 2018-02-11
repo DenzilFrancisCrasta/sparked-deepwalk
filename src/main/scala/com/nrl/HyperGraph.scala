@@ -8,11 +8,27 @@ import scala.io.Source
 import org.apache.spark.rdd.RDD
 
 class HyperGraph(edges: RDD[(Long, Long)]) {
+  /*
+
+  val triadicClosure =  edges.map( vPair => {
+                                  if (vPair._1 < vPair._2) vPair else (vPair._2, vPair._1)
+                             })
+                             .groupByKey()
+                             .flatMap{ case (k, v) => {
+                                   v.toSeq
+                                    .combinations(2)
+                                    .map{ case Seq(x, y) => (x, y)}
+                                    .toSeq
+                                    .union( v.map((k, _)).toSeq) 
+                                
+                                 }
+                             }
+ */
 
     val adjacencyList = edges.groupByKey()
                              .mapValues(_.toArray)
                              .persist(StorageLevel.MEMORY_AND_DISK)
-                             //.partitionBy(new HashPartitioner(100))
+//                             .partitionBy(new HashPartitioner(800))
 
     def getSingleRandomWalks(walkLength: Int): RDD[Array[Long]] = {
 
@@ -70,11 +86,12 @@ class HyperGraph(edges: RDD[(Long, Long)]) {
 
         for ( i <- 0 to adj.size -1) {
             for ( e <- adj(i) )  {
-                gv.edge((i+1).toString(),e.toString())
+                if (i < e)
+                  gv.edge((i+1).toString(),e.toString())
             }
         }   
         //println(gv.source())
-        gv.render(engine="dot", format="png", fileName=filename, directory = directory)
+        gv.render(engine="fdp", format="png", fileName=filename, directory = directory)
 
     }   
 
