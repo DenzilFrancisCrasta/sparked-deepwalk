@@ -7,7 +7,7 @@ import org.apache.spark.rdd.RDD
 import scala.collection.immutable.ListMap
 import java.io._
 
-import org.apache.spark.mllib.feature.{Word2Vec, Word2VecModel}
+import org.apache.spark.mllib.feature.{DeepWalk, Word2VecModel}
 
 object SparkedDeepWalkApp {
 
@@ -38,8 +38,8 @@ object SparkedDeepWalkApp {
 
             
     
-    def vertexVisitCounts(walks: RDD[List[Long]]): Array[Array[Long]] = {
-      walks.flatMap((walk: List[Long]) => walk)
+    def vertexVisitCounts(walks: RDD[List[Int]]): Array[Array[Long]] = {
+      walks.flatMap((walk: List[Int]) => walk)
            .countByValue
            .values
            .groupBy(identity)
@@ -50,7 +50,6 @@ object SparkedDeepWalkApp {
     }
 
     def parseArguments(args: Array[String]): Map[String, String] = {
-      if (args(0) != "Karate_Club") {
         Map(
           "DATASET_NAME"       -> args(0),
           "DATASET_DIR"        -> args(1),
@@ -66,22 +65,6 @@ object SparkedDeepWalkApp {
           "NUM_ITERATIONS"     -> args(11),
           "WINDOW_SIZE"        -> args(12)
         )
-      }
-      else {
-        Map(
-          "DATASET_NAME"       -> args(0),
-          "DATASET_DIR"        -> args(1),
-          "DATASET_FILE"       -> args(2),
-          "OUTPUT_DIR"         -> args(3),
-          "RANDOM_WALK_LENGTH" -> args(4),
-          "NO_OF_RANDOM_WALKS" -> args(5),
-          "VECTOR_DIM"         -> args(6),
-          "NUM_PARTITIONS"     -> args(7),
-          "NUM_ITERATIONS"     -> args(8),
-          "WINDOW_SIZE"        -> args(9)
-        )
-        
-      }
       
     }
 
@@ -100,18 +83,13 @@ object SparkedDeepWalkApp {
 
         val config = parseArguments(args)
 
-        // build the hypergraph from the serialized graph representations
-        val G = if (config("DATASET_NAME") == "Karate_Club") {
-                  val filepath = config("DATASET_DIR") + config("DATASET_FILE");
-                  HyperGraph.adjacencyMatrixFile(spark, filepath)
-                } else {
-                  val filepath = config("DATASET_DIR") + config("EDGES_FILE");
-                  HyperGraph.edgeListFile(spark, filepath)
-                }
+        // build the hypergraph from the serialized graph representation
+        val filepath = config("DATASET_DIR") + config("EDGES_FILE");
+        val G = HyperGraph.edgeListFile(spark, filepath)
 
 
-  //      val nodes  = spark.read.textFile(config("DATASET_DIR") + config("NODES_FILE")).rdd.map(_.toLong)
-   //     val labels = spark.read.textFile(config("DATASET_DIR") + config("LABELS_FILE")).rdd.map(_.toLong)
+  //      val nodes  = spark.read.textFile(config("DATASET_DIR") + config("NODES_FILE")).rdd.map(_.toInt)
+   //     val labels = spark.read.textFile(config("DATASET_DIR") + config("LABELS_FILE")).rdd.map(_.toInt)
 
         //G.render(config("DATASET_NAME"), config("OUTPUT_DIR"))
 
@@ -121,22 +99,16 @@ object SparkedDeepWalkApp {
           config("NO_OF_RANDOM_WALKS").toInt )
         randomWalks.persist(StorageLevel.MEMORY_AND_DISK)
 
-
-
-         // println(config("DATASET_NAME"))
-         // println("|V| " + nodes.count)
-         // println("|E| " + edges.count)
-         // println("|Y| " + labels.count)
-         // println("Adjacency List |V|" + adjacencyList.count)
         println("Random Walk |V|" + randomWalks.count)
 
 
-        val word2vec = (new Word2Vec())
+        val deepwalk = (new DeepWalk())
           .setNumPartitions(config("NUM_PARTITIONS").toInt)
           .setNumIterations(config("NUM_ITERATIONS").toInt)
           .setVectorSize(config("VECTOR_DIM").toInt)
           .setWindowSize(config("WINDOW_SIZE").toInt)
-        val model    = word2vec.fit(randomWalks.map(_.map(_.toString).toIterable))
+
+        val model = deepwalk.fit(randomWalks.map(_.map(_.toString).toIterable))
         
         val vectors  = model.getVectors
 
@@ -147,7 +119,7 @@ object SparkedDeepWalkApp {
     //    val visits = vertexVisitCounts(randomWalks)
      //   val outputFile = config("OUTPUT_DIR") + config("DATASET_NAME") + "_vertex_visit_freq.csv"
     //    val schema = Array("numberOfVisits" ,"numberOfVertices") 
-     //   writeCSVFile[Long](outputFile, schema, visits.toArray)
+     //   writeCSVFile[Int](outputFile, schema, visits.toArray)
 
       }
       finally {

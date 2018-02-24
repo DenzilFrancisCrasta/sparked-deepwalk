@@ -2,7 +2,7 @@
 
 """scoring.py: Script that demonstrates the multi-label classification used."""
 
-__author__      = "Bryan Perozzi"
+__author__      = "Denzil Crasta"
 
 import numpy
 import sys
@@ -32,28 +32,24 @@ class TopKRanker(OneVsRestClassifier):
             all_labels.append(labels)
         return all_labels
 
-def sparse2graph(x):
-    G = defaultdict(lambda: set())
-    cx = x.tocoo()
-    for i,j,v in zip(cx.row, cx.col, cx.data):
-        G[i].add(j)
-    return {str(k): [str(x) for x in v] for k,v in iteritems(G)}
 
 def main():
   parser = ArgumentParser("scoring",
                           formatter_class=ArgumentDefaultsHelpFormatter,
                           conflict_handler='resolve')
+  parser.add_argument("--seed", default=1234, type=int, help='seed value for random operations')
   parser.add_argument("--emb", required=True, help='Embeddings file')
   parser.add_argument("--edgelist", required=True,
                       help='A csv file containing the edges of the input network.')
   parser.add_argument("--labellist", required=True,
                       help='A csv file containing the labels of the nodes from the  input network.')
-  parser.add_argument("--num-shuffles", default=2, type=int, help='Number of shuffles.')
+  parser.add_argument("--num-shuffles", default=1, type=int, help='Number of shuffles.')
   parser.add_argument("--all", default=False, action='store_true',
                       help='The embeddings are evaluated on all training percents from 10 to 90 when this flag is set to true. '
                       'By default, only training percents of 10, 50 and 90 are used.')
 
   args = parser.parse_args()
+  seed = args.seed
   # 0. Files
   embeddings_file = args.emb
   edgelist_file = args.edgelist
@@ -62,11 +58,6 @@ def main():
   # 1. Load Embeddings
   model = KeyedVectors.load_word2vec_format(embeddings_file, binary=False)
   
-  # 2. Load labels
-  #mat = loadmat(matfile)
-  #A = mat[args.adj_matrix_name]
-  #graph = sparse2graph(A)
-
   
   graph_nodes = set()
 
@@ -90,7 +81,6 @@ def main():
   for l in labels_map.itervalues():
     all_labels |= set(l)
 
-  #labels_matrix = mat[args.label_matrix_name]
   labels_count = len(all_labels)
   mlb = MultiLabelBinarizer(range(labels_count))
  
@@ -104,7 +94,7 @@ def main():
   # 2. Shuffle, to create train/test groups
   shuffles = []
   for x in range(args.num_shuffles):
-    shuffles.append(skshuffle(features_matrix, labels_matrix))
+    shuffles.append(skshuffle(features_matrix, labels_matrix, random_state=seed))
   
   # 3. to score each train/test group
   all_results = defaultdict(list)
@@ -141,7 +131,7 @@ def main():
       for i, j in zip(cy.row, cy.col):
           y_test[i].append(j)
   
-      clf = TopKRanker(LogisticRegression())
+      clf = TopKRanker(LogisticRegression(random_state=seed))
       clf.fit(X_train, y_train_)
   
       # find out how many labels should be predicted

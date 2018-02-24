@@ -7,34 +7,18 @@ import scala.util.Random
 import scala.io.Source
 import org.apache.spark.rdd.RDD
 
-class HyperGraph(edges: RDD[(Long, Long)]) {
-  /*
-
-  val triadicClosure =  edges.map( vPair => {
-                                  if (vPair._1 < vPair._2) vPair else (vPair._2, vPair._1)
-                             })
-                             .groupByKey()
-                             .flatMap{ case (k, v) => {
-                                   v.toSeq
-                                    .combinations(2)
-                                    .map{ case Seq(x, y) => (x, y)}
-                                    .toSeq
-                                    .union( v.map((k, _)).toSeq) 
-                                
-                                 }
-                             }
- */
+class HyperGraph(edges: RDD[(Int, Int)]) {
 
     val adjacencyList = edges.groupByKey()
                              .mapValues(_.toArray)
                              .persist(StorageLevel.MEMORY_AND_DISK)
 //                             .partitionBy(new HashPartitioner(800))
 
-    def getSingleRandomWalks(walkLength: Int): RDD[Array[Long]] = {
+    def getSingleRandomWalks(walkLength: Int): RDD[Array[Int]] = {
 
       // Bootstrap the random walk from every vertex 
       var keyedRandomWalks = adjacencyList.keys.map(id => { 
-          val walk = new Array[Long](walkLength)
+          val walk = new Array[Int](walkLength)
           walk(0) = id
           (id, walk)
         })
@@ -63,12 +47,41 @@ class HyperGraph(edges: RDD[(Long, Long)]) {
 
     def getRandomWalks(
       walkLength: Int, 
-      walksPerVertex: Int): RDD[Array[Long]] = {
+      walksPerVertex: Int): RDD[Array[Int]] = {
 
-      val walks = for (i <- 1 to walksPerVertex) 
-        yield getSingleRandomWalks(walkLength) 
-      walks.reduceLeft(_ union _)
+//      val walks = for (i <- 1 to walksPerVertex) 
+//        yield getSingleRandomWalks(walkLength) 
+//      walks.reduceLeft(_ union _)
       
+      // Bootstrap the random walk from every vertex 
+      var keyedRandomWalks = adjacencyList.keys.flatMap(id => { 
+        for (iter <- 1 to walksPerVertex) 
+          yield {
+            val walk = new Array[Int](walkLength)
+            walk(0) = id
+            (id, walk)
+          }
+        })
+      
+      // Grow the walk choosing a random neighbour uniformly at random
+      for (iter <- 1 until walkLength) {
+        val grownRandomWalks = 
+          adjacencyList.join(keyedRandomWalks)
+                       .map {
+                          case (node_id, (neighbours, walk)) => {
+                            val r = new Random()
+                            val randomNeighbour = neighbours(r.nextInt(neighbours.size))
+                            walk(iter) = randomNeighbour
+                            (randomNeighbour, walk )
+                          } 
+                        }
+
+         keyedRandomWalks.unpersist()
+         keyedRandomWalks = grownRandomWalks
+
+      }
+
+      keyedRandomWalks.values
     }  
      
     /** renders the graph using graphviz library */
@@ -104,11 +117,12 @@ object HyperGraph {
       path : String )
       : HyperGraph = {
     
-      val edges = spark.read.textFile(path).rdd
+      val edges = spark.sparkContext
+                       .textFile(path, 8)
                        .flatMap { line => {
                             val fields = line.split(",")
-                            val a = fields(0).toLong
-                            val b = fields(1).toLong
+                            val a = fields(0).toInt
+                            val b = fields(1).toInt
                             Array((a,b), (b,a))
                          }
                        }
@@ -124,15 +138,15 @@ object HyperGraph {
 
       val lines = Source.fromFile(path).getLines()
 
-      val edges:Array[(Long, Long)] 
+      val edges:Array[(Int, Int)] 
             = lines.zipWithIndex
                    .flatMap{ case (line: String, i: Int) => {
                                val fields = line.trim().split(separator)
-                               fields.map(_.toLong)
+                               fields.map(_.toInt)
                                      .filter(_ == 1)
                                      .zipWithIndex
-                                     .map((e: (Long, Int)) => {
-                                       ((i + 1).toLong, (e._2 + 1).toLong)
+                                     .map((e: (Int, Int)) => {
+                                       ((i + 1).toInt, (e._2 + 1).toInt)
                                       }) 
                             } // end case expression
                    }// end flat map to generate pair (src, dest) of edges 
