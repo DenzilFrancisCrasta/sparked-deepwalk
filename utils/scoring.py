@@ -11,7 +11,7 @@ import csv
 
 from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
 from collections import defaultdict
-from gensim.models import Word2Vec, KeyedVectors
+#from gensim.models import Word2Vec, KeyedVectors
 from six import iteritems
 from sklearn.multiclass import OneVsRestClassifier
 from sklearn.linear_model import LogisticRegression
@@ -37,7 +37,7 @@ def main():
   parser = ArgumentParser("scoring",
                           formatter_class=ArgumentDefaultsHelpFormatter,
                           conflict_handler='resolve')
-  parser.add_argument("--seed", default=1234, type=int, help='seed value for random operations')
+  parser.add_argument("--seed", default=500, type=int, help='seed value for random operations')
   parser.add_argument("--emb", required=True, help='Embeddings file')
   parser.add_argument("--edgelist", required=True,
                       help='A csv file containing the edges of the input network.')
@@ -56,8 +56,16 @@ def main():
   labellist_file = args.labellist
   
   # 1. Load Embeddings
-  model = KeyedVectors.load_word2vec_format(embeddings_file, binary=False)
-  
+  #model = KeyedVectors.load_word2vec_format(embeddings_file, binary=False)
+
+  model = {}
+  with open(embeddings_file) as emb_file:
+    reader = csv.reader(emb_file, delimiter=' ')
+    header = reader.next()
+    print(header[0], header[1])
+    for row in reader:
+      model[row[0]] = [float(k) for k in row[1:]]
+
   
   graph_nodes = set()
 
@@ -75,7 +83,7 @@ def main():
     for row in reader:
       labels_map[row['vertex']].append(int(row['label']))
 
-  ordered_labels = [labels_map[str(node)] for node in range(1,len(graph_nodes)+1)]
+  ordered_labels = [labels_map[str(node)] for node in range(1,len(graph_nodes)+1) if str(node) in  model ]
 
   all_labels = set()
   for l in labels_map.itervalues():
@@ -89,7 +97,7 @@ def main():
 
   
   # Map nodes to their features (note:  assumes nodes are labeled as integers 1:N)
-  features_matrix = numpy.asarray([model[str(node)] for node in range(1,len(graph_nodes)+1)])
+  features_matrix = numpy.asarray([model[str(node)] for node in range(1,len(graph_nodes)+1) if str(node) in model ])
   
   # 2. Shuffle, to create train/test groups
   shuffles = []

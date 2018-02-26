@@ -9,6 +9,7 @@ import java.io._
 
 import org.apache.spark.mllib.feature.{DeepWalk, Word2VecModel}
 
+
 object SparkedDeepWalkApp {
 
     def writeCSVFile[T](
