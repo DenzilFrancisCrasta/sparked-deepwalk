@@ -100,7 +100,7 @@ object SparkedDeepWalkApp {
           config("NO_OF_RANDOM_WALKS").toInt )
         randomWalks.persist(StorageLevel.MEMORY_AND_DISK)
 
- //       println("Random Walk |V|" + randomWalks.count)
+        println("Random Walk |V|" + randomWalks.count)
 
 
         val deepwalk = (new DeepWalk())
@@ -114,7 +114,7 @@ object SparkedDeepWalkApp {
         val vectors  = model.getVectors
 
         val vectorFile = config("OUTPUT_DIR") + config("DATASET_NAME")  + "_vec.txt"
-      saveVectors(vectorFile, Array(vectors.size, config("VECTOR_DIM").toInt), vectors)
+        saveVectors(vectorFile, Array(vectors.size, config("VECTOR_DIM").toInt), vectors)
 
 
     //    val visits = vertexVisitCounts(randomWalks)
