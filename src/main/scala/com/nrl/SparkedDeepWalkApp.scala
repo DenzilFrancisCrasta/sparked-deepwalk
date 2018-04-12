@@ -100,7 +100,7 @@ object SparkedDeepWalkApp {
           config("NO_OF_RANDOM_WALKS").toInt )
         randomWalks.persist(StorageLevel.MEMORY_AND_DISK)
 
-        println("Random Walk |V|" + randomWalks.count)
+ //       println("Random Walk |V|" + randomWalks.count)
 
 
         val deepwalk = (new DeepWalk())

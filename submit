@@ -6,9 +6,9 @@ then
   exit 1
 fi
 
-SAVE_PATH="output/"
-NO_OF_RANDOM_WALKS=40
-RANDOM_WALK_LENGTH=10
+SAVE_PATH="/tmp/"
+NO_OF_RANDOM_WALKS=80
+RANDOM_WALK_LENGTH=40
 VECTOR_DIM=128
 NUM_PARTITIONS=1
 NUM_ITERATIONS=1
@@ -16,49 +16,19 @@ WINDOW_SIZE=10
 
 DATASET=$1
 
-if [ $DATASET = 'karate' ]
-then
-  DATASET_NAME="Karate_Club"
-  DATASET_ROOT="datasets/Zachary/"
+DATASET_NAME=$DATASET
+DATASET_ROOT="datasets/$DATASET/data/"
+EDGES_FILE="edges.csv"
+NODES_FILE="nodes.csv"
+LABELS_FILE="groups.csv"
+NODE_TAG_FILE="group-edges.csv" 
 
-  time spark-submit --master local[8] \
+time spark-submit --master spark://10.6.15.148:7077  \
                   --jars lib/Graphviz4S-1.0-SNAPSHOT.jar \
                   --class com.nrl.SparkedDeepWalkApp \
-                  target/scala-2.11/sparked-deepwalk_2.11-1.0.jar \
-                  $DATASET_NAME \
-                  $DATASET_ROOT \
-                  "karate.dat" \
-                  $SAVE_PATH \
-                  $RANDOM_WALK_LENGTH \
-                  $NO_OF_RANDOM_WALKS \
-                  $VECTOR_DIM
-
-
-elif [ $DATASET = 'blog' ]
-then
-  DATASET_NAME="BlogCatalog"
-  DATASET_ROOT="datasets/BlogCatalog/data/"
-  EDGES_FILE="edges.csv"
-  NODES_FILE="nodes.csv"
-  LABELS_FILE="groups.csv"
-  NODE_TAG_FILE="group-edges.csv" 
-elif [ $DATASET = 'youtube' ]
-then
-  DATASET_NAME="Youtube"
-  DATASET_ROOT="datasets/YouTube/data/"
-  EDGES_FILE="edges.csv"
-  NODES_FILE="nodes.csv"
-  LABELS_FILE="groups.csv"
-  NODE_TAG_FILE="group-edges.csv" 
-fi
-
-if [ $DATASET != "karate" ]
-then 
-time spark-submit --master local[*] \
-                  --executor-memory 3g \
-                  --driver-memory 1g \
-                  --jars lib/Graphviz4S-1.0-SNAPSHOT.jar \
-                  --class com.nrl.SparkedDeepWalkApp \
+                  --conf spark.driver.memory=6g \
+                  --conf spark.executor.memory=6g \
+                  --conf spark.driver.maxResultSize=7g \
                   target/scala-2.11/sparked-deepwalk_2.11-1.0.jar \
                   $DATASET_NAME \
                   $DATASET_ROOT \
@@ -73,10 +43,9 @@ time spark-submit --master local[*] \
                   $NUM_PARTITIONS \
                   $NUM_ITERATIONS \
                   $WINDOW_SIZE 
-fi
 
 OUTPUT_SUFFIX="_vertex_visit_freq.csv"
-python utils/plot.py $SAVE_PATH$DATASET_NAME$OUTPUT_SUFFIX $DATASET_NAME 
+#python utils/plot.py $SAVE_PATH$DATASET_NAME$OUTPUT_SUFFIX $DATASET_NAME 
 
 VEC_SUFFIX="_vec.txt"
-python utils/scoring.py --emb output/$DATASET_NAME$VEC_SUFFIX --network datasets/$DATASET_NAME/$DATASET_NAME".mat"
+#python utils/scoring.py --emb $SAVE_PATH$DATASET_NAME$VEC_SUFFIX --edgelist datasets/$DATASET_NAME/data/edges.csv --labellist datasets/$DATASET_NAME/data/group-edges.csv --small

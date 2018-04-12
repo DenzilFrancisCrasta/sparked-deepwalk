@@ -12,7 +12,7 @@ class HyperGraph(edges: RDD[(Int, Int)]) {
     val adjacencyList = edges.groupByKey()
                              .mapValues(_.toArray)
                              .persist(StorageLevel.MEMORY_AND_DISK)
-//                             .partitionBy(new HashPartitioner(800))
+                         //    .partitionBy(new HashPartitioner(30))
 
     def getSingleRandomWalks(walkLength: Int): RDD[Array[Int]] = {
 
